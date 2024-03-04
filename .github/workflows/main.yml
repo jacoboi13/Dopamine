@@ -1,4 +1,4 @@
-name: "Dopamine: build and upload"
+name: "Dopamine: daily build and upload"
 
 on:
   push:
@@ -94,3 +94,34 @@ jobs:
           name: Dopamine
           path: |
             ${{ github.workspace }}/Application/Dopamine.ipa
+            
+      - name: Delete Old-Release
+        uses: dev-drprasad/delete-tag-and-release@v0.2.1
+        with:
+          delete_release: true
+          tag_name: daily_release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          
+      - name: Create Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: daily_release
+          release_name: Dopamine Daily Release
+          body: These are automatically updated builds of the latest commit.
+          draft: false
+          prerelease: false
+
+      - name: Upload Release Asset
+        id: upload-release-asset
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ${{ github.workspace }}/Application/Dopamine.ipa
+          asset_name: Dopamine.ipa
+          asset_content_type: application/octet-stream
